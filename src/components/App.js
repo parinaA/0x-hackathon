@@ -1,6 +1,5 @@
 import React from 'react';
 import axios from 'axios';
-import { HttpClient } from '@0x/connect';
 import {
   assetDataUtils,
   BigNumber,
@@ -37,8 +36,6 @@ export default class connectApp extends React.Component {
     const taker = '0x018883Ae1b7C8f17B8864b9DAca92A227A6CEc20';
     const zrxTokenAddress = contractAddresses.zrxToken;
     const etherTokenAddress = contractAddresses.etherToken;
-    // console.log(zrxTokenAddress);
-    // console.log(etherTokenAddress);
     const makerAssetAmount = Web3Wrapper.toBaseUnitAmount(new BigNumber(5), DECIMALS);
     const takerAssetAmount = Web3Wrapper.toBaseUnitAmount(new BigNumber(0.1), DECIMALS);
     const makerAssetData = assetDataUtils.encodeERC20AssetData(zrxTokenAddress);
@@ -50,13 +47,11 @@ export default class connectApp extends React.Component {
     contractWrappers.erc20Token.setUnlimitedProxyAllowanceAsync(zrxTokenAddress, maker)
       .then(makerZRXApprovalTxHash => {
         console.log(makerZRXApprovalTxHash);
-
-
         const randomExpiration = getRandomFutureDateInSeconds();
         const exchangeAddress = contractAddresses.exchange;
         const feeRecipientAddress = "0xb046140686d052fff581f63f8136cce132e857da";
         // Create the order
-        const order = {
+        var order = {
           exchangeAddress,
           makerAddress: maker,
           takerAddress: NULL_ADDRESS,
@@ -71,61 +66,30 @@ export default class connectApp extends React.Component {
           makerFee: ZERO,
           takerFee: ZERO,
         };
-
-
-
         const orderHashHex = orderHashUtils.getOrderHashHex(order);
-        // web3.eth.sign(maker, orderHashHex, (err, signature) => {
-        // const sign = this.signfunc (providerEngine,orderHashHex,maker);
         signatureUtils.ecSignHashAsync(new MetamaskSubprovider(providerEngine), orderHashHex, maker)
           .then(sign => {
             console.log("signature callback", sign);
             order.signature = sign;
             console.log(order);
             axios.post('http://localhost:3000/v2/order', order).then(result => {
-                  console.log("result from post request ", result);
-                })
-                  .catch(err => {
-                    console.log("err", err);
-                  })           
-            contractWrappers.exchange.validateFillOrderThrowIfInvalidAsync(order, takerAssetAmount, taker)
-              .then(() => {
-                console.log("order validated");
-                axios.post('http://localhost:3000/v2/order', order).then(result => {
-                  console.log("result from post request ", result);
-                })
-                  .catch(err => {
-                    console.log("err", err);
-                  })
-                // contractWrappers.exchange.fillOrderAsync(signedOrder, takerAssetAmount, taker, {
-                //   gasLimit: TX_DEFAULTS.gas,
-                // }).then(txhash => {
-                //   console.log("tx hash");
-                //   console.log(txhash);
-                // })
-                //   .catch(err => {
-                //     console.log("error in exchange");
-                //   })
+              console.log("result from post request ", result);
+            })
+              .catch(err => {
+                console.log("err", err);
               })
-
           })
-
       })
       .catch(err => {
         console.log("contract wrapper .erc20");
         console.log(err);
-      });
-    //0x0b9b1c0ffe7d4613c8564570a957d8b912d7a0ef9c67575d7bed640b5f2aa688      
+      });    
   }
 
   render() {
     return (
       <div>
-
-        <form>
-          <input type="text" name="option" />
-          <button>Add Option</button>
-        </form>
+        <p>hello</p>
       </div>
     );
   }
