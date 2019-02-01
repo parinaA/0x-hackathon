@@ -17,17 +17,16 @@ import { DECIMALS, NULL_ADDRESS, ZERO } from '../constants';
 import { contractAddresses } from '../contracts';
 import { getRandomFutureDateInSeconds } from '../utils';
 
-
-
-
 export default class connectApp extends React.Component {
 
-
-  async signfunc(providerEngine, orderHashHex, maker) {
-    return await signatureUtils.ecSignHashAsync(new MetamaskSubprovider(providerEngine), orderHashHex, maker)
-
+  constructor(props) {
+    super(props);
+    this.postOrder = this.postOrder.bind(this);
+    this.fillOrder = this.fillOrder.bind(this);
+    this.unmarshallOrder = this.unmarshallOrder.bind(this);
   }
-  componentDidMount() {
+
+  postOrder() {
 
     const providerEngine = Web3.givenProvider;
     const contractWrappers = new ContractWrappers(providerEngine, { networkId: RINKEBY_CONFIGS.networkId });
@@ -36,8 +35,8 @@ export default class connectApp extends React.Component {
     const taker = '0x018883Ae1b7C8f17B8864b9DAca92A227A6CEc20';
     const zrxTokenAddress = contractAddresses.zrxToken;
     const etherTokenAddress = contractAddresses.etherToken;
-    const makerAssetAmount = Web3Wrapper.toBaseUnitAmount(new BigNumber(5), DECIMALS);
-    const takerAssetAmount = Web3Wrapper.toBaseUnitAmount(new BigNumber(0.1), DECIMALS);
+    const makerAssetAmount = Web3Wrapper.toBaseUnitAmount(new BigNumber(15), DECIMALS);
+    const takerAssetAmount = Web3Wrapper.toBaseUnitAmount(new BigNumber(0.01), DECIMALS);
     const makerAssetData = assetDataUtils.encodeERC20AssetData(zrxTokenAddress);
     const takerAssetData = assetDataUtils.encodeERC20AssetData(etherTokenAddress);
     let txHash;
@@ -56,7 +55,7 @@ export default class connectApp extends React.Component {
           makerAddress: maker,
           takerAddress: NULL_ADDRESS,
           senderAddress: NULL_ADDRESS,
-          feeRecipientAddress,
+          feeRecipientAddress: NULL_ADDRESS,
           expirationTimeSeconds: randomExpiration,
           salt: generatePseudoRandomSalt(),
           makerAssetAmount,
@@ -71,7 +70,7 @@ export default class connectApp extends React.Component {
           .then(sign => {
             console.log("signature callback", sign);
             order.signature = sign;
-            console.log(order);
+            console.log("order", order);
             axios.post('http://localhost:3000/v2/order', order).then(result => {
               console.log("result from post request ", result);
             })
@@ -83,13 +82,77 @@ export default class connectApp extends React.Component {
       .catch(err => {
         console.log("contract wrapper .erc20");
         console.log(err);
-      });    
+      });
+  }
+  unmarshallOrder(signedOrderRaw) {
+    // const signedOrder = {
+
+    //     salt: BigNumber(signedOrderRaw.salt),
+    //     makerAssetAmount: BigNumber(signedOrderRaw.makerAssetAmount),
+    //     takerAssetAmount: BigNumber(signedOrderRaw.takerAssetAmount),
+    //     makerFee: BigNumber(signedOrderRaw.makerFee),
+    //     takerFee: BigNumber(signedOrderRaw.takerFee),
+    //     expirationTimeSeconds: BigNumber(signedOrderRaw.expirationTimeSeconds),
+    //     ...signedOrderRaw
+    //   };
+    signedOrderRaw.salt = new BigNumber(signedOrderRaw.salt);
+    signedOrderRaw.makerAssetAmount = new BigNumber(signedOrderRaw.makerAssetAmount);
+    signedOrderRaw.takerAssetAmount = new BigNumber(signedOrderRaw.takerAssetAmount);
+    signedOrderRaw.makerFee = new BigNumber(signedOrderRaw.makerFee);
+    signedOrderRaw.takerFee = new BigNumber(signedOrderRaw.takerFee);
+    signedOrderRaw.expirationTimeSeconds = new BigNumber(signedOrderRaw.expirationTimeSeconds);
+    return signedOrderRaw;
   }
 
+  fillOrder() {
+    const providerEngine = Web3.givenProvider;
+    const contractWrappers = new ContractWrappers(providerEngine, { networkId: RINKEBY_CONFIGS.networkId });
+    axios.get("http://localhost:3000/v2/orders")
+      .then(body => {
+        console.log(body);
+        const order = body.data.records[1].order;
+        const taker = web3.eth.accounts.toString();
+        const etherTokenAddress = contractAddresses.etherToken;
+        contractWrappers.erc20Token.setUnlimitedProxyAllowanceAsync(etherTokenAddress, taker)
+          .then(() => {
+            contractWrappers.etherToken.depositAsync(etherTokenAddress, Web3Wrapper.toBaseUnitAmount(new BigNumber(order.takerAssetAmount / 1000000000000000000), DECIMALS), taker)
+              .then(() => {
+                console.log(order);
+                const ord = this.unmarshallOrder(order);
+                console.log(ord);
+                contractWrappers.exchange.validateFillOrderThrowIfInvalidAsync(ord, Web3Wrapper.toBaseUnitAmount(new BigNumber(order.takerAssetAmount / 1000000000000000000), DECIMALS), taker)
+                  .then(txhash => {
+                    console.log("valid suc", txhash);
+                    contractWrappers.exchange.fillOrderAsync(ord, Web3Wrapper.toBaseUnitAmount(new BigNumber(order.takerAssetAmount / 1000000000000000000), DECIMALS), taker, {
+                      gasLimit: TX_DEFAULTS.gas,
+                    })
+                    .then(hash => {
+                      console.log("exc suc",hash);
+
+                    })
+            })
+                  .catch(err => {
+                    console.log("exchange", err);
+                  })
+              })
+              .catch(err => {
+                console.log("weth", err);
+              })
+          })
+          .catch(err => {
+            console.log("proxy error", err);
+          });
+      })
+      .catch(err => {
+        //axios catch
+        console.log("axios error", err);
+      })
+  }
   render() {
     return (
       <div>
-        <p>hello</p>
+        <button className="btn btn-primary" onClick={this.postOrder}>Post order</button>
+        <button className="btn btn-primary" onClick={this.fillOrder}>Fill order</button>
       </div>
     );
   }
