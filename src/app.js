@@ -8,6 +8,7 @@ import 'normalize.css/normalize.css';
 import './styles/styles.scss';
 import 'babel-polyfill';
 import App from './components/App';
+import OrderBook from './components/orderBook';
 
 ReactDOM.render(<App />, document.getElementById('app'));
 

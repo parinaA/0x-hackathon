@@ -68,7 +68,7 @@ export default class connectApp extends React.Component {
             console.log("signature callback", sign);
             order.signature = sign;
             console.log("order", order);
-            axios.post('http://localhost:3000/v2/order', order).then(result => {
+            axios.post('http://localhost:3000/v2/order',{order:order,strike:50} ).then(result => {
               console.log("result from post request ", result);
             })
               .catch(err => {
@@ -99,7 +99,9 @@ fillOrder() {
     axios.get("http://localhost:3000/v2/orders")
       .then(body => {
         console.log(body);
-        const order = body.data.records[1].order;
+        const order = body.data.records[0].order;
+        const strikePrice = order.strikePrice;
+        delete order.strikePrice;
         const taker = web3.eth.accounts.toString();
         const etherTokenAddress = contractAddresses.etherToken;
         contractWrappers.erc20Token.setUnlimitedProxyAllowanceAsync(etherTokenAddress, taker)
@@ -137,6 +139,8 @@ fillOrder() {
         console.log("axios error", err);
       })
   }
+
+
   render() {
     return (
       <div>
