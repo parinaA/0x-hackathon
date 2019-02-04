@@ -1,7 +1,7 @@
 import React from 'react';
 import axios from 'axios';
 
-export default class OrderBook {
+export default class OrderBook extends React.Component{
     constructor(props)
     {
         super(props);
