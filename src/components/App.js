@@ -32,15 +32,12 @@ export default class connectApp extends React.Component {
     const contractWrappers = new ContractWrappers(providerEngine, { networkId: RINKEBY_CONFIGS.networkId });
     const web3Wrapper = new Web3Wrapper(providerEngine);
     const maker = web3.eth.accounts.toString();
-    const taker = '0x018883Ae1b7C8f17B8864b9DAca92A227A6CEc20';
     const zrxTokenAddress = contractAddresses.zrxToken;
     const etherTokenAddress = contractAddresses.etherToken;
     const makerAssetAmount = Web3Wrapper.toBaseUnitAmount(new BigNumber(15), DECIMALS);
     const takerAssetAmount = Web3Wrapper.toBaseUnitAmount(new BigNumber(0.01), DECIMALS);
     const makerAssetData = assetDataUtils.encodeERC20AssetData(zrxTokenAddress);
     const takerAssetData = assetDataUtils.encodeERC20AssetData(etherTokenAddress);
-    let txHash;
-    let txReceipt;
 
     // Allow the 0x ERC20 Proxy to move ZRX on behalf of makerAccount
     contractWrappers.erc20Token.setUnlimitedProxyAllowanceAsync(zrxTokenAddress, maker)
@@ -85,16 +82,7 @@ export default class connectApp extends React.Component {
       });
   }
   unmarshallOrder(signedOrderRaw) {
-    // const signedOrder = {
 
-    //     salt: BigNumber(signedOrderRaw.salt),
-    //     makerAssetAmount: BigNumber(signedOrderRaw.makerAssetAmount),
-    //     takerAssetAmount: BigNumber(signedOrderRaw.takerAssetAmount),
-    //     makerFee: BigNumber(signedOrderRaw.makerFee),
-    //     takerFee: BigNumber(signedOrderRaw.takerFee),
-    //     expirationTimeSeconds: BigNumber(signedOrderRaw.expirationTimeSeconds),
-    //     ...signedOrderRaw
-    //   };
     signedOrderRaw.salt = new BigNumber(signedOrderRaw.salt);
     signedOrderRaw.makerAssetAmount = new BigNumber(signedOrderRaw.makerAssetAmount);
     signedOrderRaw.takerAssetAmount = new BigNumber(signedOrderRaw.takerAssetAmount);
@@ -104,7 +92,8 @@ export default class connectApp extends React.Component {
     return signedOrderRaw;
   }
 
-  fillOrder() {
+
+fillOrder() {
     const providerEngine = Web3.givenProvider;
     const contractWrappers = new ContractWrappers(providerEngine, { networkId: RINKEBY_CONFIGS.networkId });
     axios.get("http://localhost:3000/v2/orders")
