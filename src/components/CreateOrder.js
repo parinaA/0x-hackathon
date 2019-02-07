@@ -1,6 +1,6 @@
 import React from 'react';
 import DateTime from 'react-datetime';
-import {createOrder} from '../utils';
+import { createOrderFunc ,sendDataToContract} from '../utils';
 
 export default class CreateOrder extends React.Component {
     constructor(props) {
@@ -8,32 +8,42 @@ export default class CreateOrder extends React.Component {
 
         this.handleSubmitOrder = this.handleSubmitOrder.bind(this);
         this.handleBaseTokenChange = this.handleBaseTokenChange.bind(this);
+        this.dateChange = this.dateChange.bind(this);
 
         this.state = {
             baseTokenValue: 'ZRX',
-            quoteTokenValue: 'WETH'
+            quoteTokenValue: 'WETH',
+            unixDate: undefined
         }
     }
 
-    handleBaseTokenChange(event){
-        this.setState({baseTokenValue:event.target.value});
+    handleBaseTokenChange(event) {
+        this.setState({ baseTokenValue: event.target.value });
     }
 
-    handleQuoteTokenChange(event){
-        this.setState({quoteTokenValue:event.target.value});
+    handleQuoteTokenChange(event) {
+        this.setState({ quoteTokenValue: event.target.value });
     }
 
-    handleSubmitOrder(e){
-        e.preventDefault();
-        console.log(this.state.baseTokenValue);
-    }
     validDate(current) {
         var yesterday = DateTime.moment().subtract(1, 'day');
         return current.isAfter(yesterday);
     }
 
-    dateChange(date){
-        console.log(date);
+    dateChange(date) {
+        console.log(date.unix());
+        this.setState({
+            unixDate:date.unix()
+        })
+    }
+
+    async handleSubmitOrder(e) {
+        e.preventDefault();
+        const strikePrie = e.target.elements.strikePrice.value.trim();
+        const numOfTokens = e.target.elements.numofbasetokens.value.trim();
+        const premium = e.target.elements.premium.value.trim();
+        // const optionTokenAddress =  await 
+        createOrderFunc(this.state.baseTokenValue,this.state.quoteTokenValue,strikePrie,numOfTokens,premium,this.state.unixDate);   
     }
 
     render() {
@@ -64,17 +74,17 @@ export default class CreateOrder extends React.Component {
 
                     <div className="form-group">
                         <label htmlFor="numOfTokens">Number of base tokens</label>
-                        <input type="number" className="form-control form-control-lg" placeholder="Base tokens"></input>
+                        <input type="number" className="form-control form-control-lg" name="numofbasetokens" placeholder="Base tokens"></input>
                     </div>
 
                     <div className="form-group">
                         <label htmlFor="premium">Premium</label>
-                        <input type="number" className="form-control form-control-lg" placeholder="Premium Amount"></input>
+                        <input type="number" className="form-control form-control-lg" name="premium" placeholder="Premium Amount"></input>
                     </div>
 
                     <div className="form-group">
                         <label htmlFor="expiryTime">Expiry Date and Time</label>
-                        <DateTime isValidDate={this.validDate} defaultText="Please select an expiry date" onChange={this.dateChange} />
+                        <DateTime isValidDate={this.validDate} onChange={this.dateChange} />
                     </div>
                     <button className="button btn btn-primary">Submit</button>
                 </form>
