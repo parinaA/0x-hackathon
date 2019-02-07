@@ -1,46 +1,23 @@
 import React from 'react';
+import { timeConverter } from '../utils';
 
 export default class OrderTable extends React.Component {
     constructor(props) {
-		super(props)
-		this.state = {
-            basetoken='',
-            quotetoken='',
-            strikeprice=null,
-            expiry='',
-            nbt='',
-            premium=null,
-        }
-		
-	}
+        super(props)
+
+    }
 
     render() {
         return (
-            <div>
-            <table className="table table-striped">
-            <thead>
-                <tr>
-                <th scope="col">#</th>
-                <th scope="col">Base Token</th>
-                <th scopr="col">Quote Token</th>
-                <th scope="col">Strike Price</th>
-                <th scope="col">Expiry Date</th>
-                <th scope="col">No. of Base Tokens</th>
-                <th scope="col">Premium</th>
-                <th scope="col">No. of Options Remaining</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                <th scope="row">1</th>
-                <td>Mark</td>
-                <td>Otto</td>
-                <td>@mdo</td>
-                <td>20</td>
-                </tr>
-            </tbody>
-            </table>
-            </div>
+            <tr>
+                <th scope="row">{this.props.index+1}</th>
+                <td>{this.props.record.order.baseToken}</td>
+                <td>{this.props.record.order.quoteToken}</td>
+                <td>{this.props.record.order.strikePrice}</td>
+                <td>{timeConverter(this.props.record.order.expirationTimeSeconds)}</td>
+                <td>{this.props.record.order.numberOfBaseToken}</td>
+                <td>{this.props.record.order.premium}</td>
+            </tr>
         )
     }
 }
