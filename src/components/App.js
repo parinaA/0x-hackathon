@@ -31,7 +31,7 @@ export default class connectApp extends React.Component {
     const providerEngine = Web3.givenProvider;
     const contractWrappers = new ContractWrappers(providerEngine, { networkId: RINKEBY_CONFIGS.networkId });
     const web3Wrapper = new Web3Wrapper(providerEngine);
-    const maker = web3.eth.accounts.toString();
+    const maker = web3.eth.accounts.toString();         
     const zrxTokenAddress = contractAddresses.zrxToken;
     const etherTokenAddress = contractAddresses.etherToken;
     const makerAssetAmount = Web3Wrapper.toBaseUnitAmount(new BigNumber(15), DECIMALS);
