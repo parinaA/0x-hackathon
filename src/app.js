@@ -8,7 +8,7 @@ import 'normalize.css/normalize.css';
 import './styles/styles.scss';
 import 'babel-polyfill';
 import App from './components/App';
-import Routers from './components/router';
+import Routers from './components/Router';
 
 ReactDOM.render(<Routers />, document.getElementById('app'));
 
